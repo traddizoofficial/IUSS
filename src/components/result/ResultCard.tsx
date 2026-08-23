@@ -3,6 +3,7 @@ import { Result, Exam, SchoolSettings } from '../../types';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import { cn } from '../../lib/utils';
+import html2canvas from 'html2canvas';
 import { toJpeg } from 'html-to-image';
 import jsPDF from 'jspdf';
 
@@ -30,23 +31,61 @@ export default function ResultCard({ result, exam }: ResultCardProps) {
     fetchSettings();
   }, []);
 
+  const getCardImage = async (): Promise<string | null> => {
+    const element = document.getElementById('result-card-content');
+    if (!element) return null;
+
+    try {
+      // Use html2canvas with explicit clean options to prevent mobile offsets / black borders
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        scrollX: 0,
+        scrollY: 0,
+        logging: false,
+        onclone: (clonedDoc) => {
+          const card = clonedDoc.getElementById('result-card-content');
+          if (card) {
+            card.style.width = '800px';
+            card.style.maxWidth = '800px';
+            card.style.minWidth = '800px';
+            card.style.margin = '0 auto';
+            card.style.padding = '0';
+            card.style.boxShadow = 'none';
+            card.style.border = 'none';
+          }
+        }
+      });
+      return canvas.toDataURL('image/jpeg', 0.95);
+    } catch (err) {
+      console.warn('html2canvas failed, trying html-to-image fallback:', err);
+      return await toJpeg(element, {
+        quality: 0.95,
+        pixelRatio: 2,
+        backgroundColor: '#ffffff',
+        cacheBust: true,
+      });
+    }
+  };
+
   const handleDownloadPDF = async () => {
     if (isGenerating) return;
     setIsGenerating(true);
     try {
-      const element = document.getElementById('result-card-content');
-      if (!element) return;
-      
-      const imgData = await toJpeg(element, { quality: 1.0, pixelRatio: 2 });
+      const imgData = await getCardImage();
+      if (!imgData) throw new Error("Could not capture card");
       
       const pdf = new jsPDF('p', 'mm', 'a4');
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      // Estimate height based on element aspect ratio
-      const elementWidth = element.offsetWidth;
-      const elementHeight = element.offsetHeight;
-      const pdfHeight = (elementHeight * pdfWidth) / elementWidth;
+      const pdfWidth = pdf.internal.pageSize.getWidth(); // 210mm
+      const pdfHeight = pdf.internal.pageSize.getHeight(); // 297mm
       
-      pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+      const element = document.getElementById('result-card-content');
+      const elementWidth = element?.offsetWidth || 800;
+      const elementHeight = element?.offsetHeight || 1100;
+      const calculatedHeight = Math.min((elementHeight * pdfWidth) / elementWidth, pdfHeight);
+      
+      pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, calculatedHeight);
       pdf.save(`${result.studentName || result.rollNumber}_${exam?.examName || 'Result'}.pdf`);
     } catch (error) {
       console.error(error);
@@ -60,20 +99,20 @@ export default function ResultCard({ result, exam }: ResultCardProps) {
     if (isGenerating) return;
     setIsGenerating(true);
     try {
-      const element = document.getElementById('result-card-content');
-      if (!element) return;
+      const imgData = await getCardImage();
+      if (!imgData) throw new Error("Could not capture card");
       
-      const imgData = await toJpeg(element, { quality: 1.0, pixelRatio: 2 });
+      const fileName = `${result.studentName || result.rollNumber}_${exam?.examName || 'Result'}.jpg`;
       
       try {
         const link = document.createElement('a');
-        link.download = `${result.studentName || result.rollNumber}_${exam?.examName || 'Result'}.jpg`;
+        link.download = fileName;
         link.href = imgData;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
       } catch (e) {
-        console.log("Direct download failed, falling back to preview");
+        console.log("Direct download failed, showing preview");
       }
       
       // Show preview overlay for mobile/iOS where silent downloads often fail
