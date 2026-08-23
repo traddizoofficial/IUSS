@@ -85,7 +85,7 @@ export default function PublicPortal() {
         <meta property="og:description" content="Check your child's examination result securely and instantly." />
       </Helmet>
       
-      <header className="bg-white border-b border-slate-200 shadow-sm py-4">
+      <header className="bg-white border-b border-slate-200 shadow-sm py-4 print:hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center">
           <div className="flex items-center space-x-3">
             <GraduationCap className="h-8 w-8 text-blue-800" />
@@ -99,7 +99,7 @@ export default function PublicPortal() {
         </div>
       </header>
 
-      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full flex flex-col items-center">
+      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full flex flex-col items-center print:p-0 print:m-0 print:max-w-none">
         {!result ? (
           <div className="w-full max-w-2xl bg-white shadow-xl rounded-2xl overflow-hidden border border-slate-100">
             <div className="bg-blue-900 text-white p-8 text-center">
@@ -190,7 +190,7 @@ export default function PublicPortal() {
               <title>{result.studentName} - Exam Result | Ibn-e-Umar School</title>
               <meta name="description" content={`View examination result for ${result.studentName} (${result.rollNumber}).`} />
             </Helmet>
-            <div className="mb-6 flex justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+            <div className="mb-6 flex justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-slate-200 print:hidden">
               <button 
                 type="button"
                 onClick={() => setResult(null)}
@@ -208,8 +208,8 @@ export default function PublicPortal() {
                 </button>
               </div>
             </div>
-            <div className="bg-white shadow-2xl rounded-lg overflow-hidden border border-slate-200 p-4 sm:p-8 w-full overflow-x-auto print:shadow-none print:border-none print:p-0">
-              <div className="min-w-[800px] mx-auto print:min-w-0">
+            <div className="bg-white shadow-2xl rounded-lg overflow-hidden border border-slate-200 p-4 sm:p-8 w-full overflow-x-auto print:shadow-none print:border-none print:p-0 print:m-0 print:overflow-visible">
+              <div className="min-w-[800px] mx-auto print:min-w-0 print:w-full print:m-0">
                 <ResultCard result={result} exam={exams.find(e => e.id === result.examId)} />
               </div>
             </div>
@@ -217,7 +217,7 @@ export default function PublicPortal() {
         )}
       </main>
 
-      <footer className="bg-slate-900 text-slate-400 py-8 mt-auto">
+      <footer className="bg-slate-900 text-slate-400 py-8 mt-auto print:hidden">
         <div className="max-w-7xl mx-auto px-4 text-center text-sm">
           <p>&copy; {new Date().getFullYear()} Ibn-e-Umar School System & Academy. All rights reserved.</p>
         </div>

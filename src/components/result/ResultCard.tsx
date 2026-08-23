@@ -146,84 +146,83 @@ export default function ResultCard({ result, exam }: ResultCardProps) {
         </button>
       </div>
 
-      <div id="result-card-content" className="bg-white mx-auto w-full max-w-[210mm] min-h-[297mm] text-slate-800 print:p-0">
+      <div id="result-card-content" className="bg-white mx-auto w-full max-w-[210mm] text-slate-800 print:p-0 print:m-0 print:max-w-none print:w-full">
         
-        {/* Header Block exactly like screenshot */}
+        {/* Header Block */}
         <div className="w-full">
           {/* Main Title */}
-          <div className="bg-[#1e3a8a] text-white py-3 px-4 text-center">
-            <h1 className="text-[28px] font-bold font-serif uppercase tracking-wide">
+          <div className="bg-[#1e3a8a] text-white py-2 px-3 text-center">
+            <h1 className="text-xl sm:text-2xl font-bold font-serif uppercase tracking-wide">
               {settings?.schoolName || 'IBN-E-Umar School System'}
             </h1>
           </div>
           {/* Address Line */}
-          <div className="bg-[#4760a9] text-white py-1 px-4 text-center text-xs">
+          <div className="bg-[#4760a9] text-white py-0.5 px-3 text-center text-[11px]">
             {settings?.address || '23km Ferozpur Road, Suwa Gajumatta Kahna Nau Lahore | Ph: 0305-6883315'}
           </div>
           {/* Session Line */}
-          <div className="bg-[#fff9e6] text-[#4a4a4a] py-1.5 px-4 text-center text-sm font-bold border-b border-[#e5e7eb]">
+          <div className="bg-[#fff9e6] text-[#4a4a4a] py-1 px-3 text-center text-xs font-bold border-b border-[#e5e7eb]">
             {exam?.examName || 'First Term Examination'} — Session {exam?.academicSession || '2026 - 2027'}
           </div>
           {/* Result Card Title */}
-          <div className="text-center py-2">
-            <h2 className="text-[#d97706] text-xl font-bold uppercase tracking-widest">
+          <div className="text-center py-1.5">
+            <h2 className="text-[#d97706] text-base sm:text-lg font-bold uppercase tracking-widest">
               {settings?.resultCardTitle || 'STUDENT RESULT CARD'}
             </h2>
           </div>
         </div>
 
-        <div className="p-6 pt-0">
+        <div className="p-4 sm:p-5 pt-0 print:p-2 print:pt-0">
           {/* Class ID Box */}
-          <div className="flex items-center mb-2 text-xs font-bold">
-            <span className="mr-2">Select Class ID:</span>
-            <span className="text-gray-500 font-normal italic mr-2">(choose from dropdown ▼)</span>
+          <div className="flex items-center mb-1 text-[11px] font-bold">
+            <span className="mr-2">Class:</span>
           </div>
-          <div className="flex mb-4 text-sm font-bold">
-            <div className="border-2 border-[#1e3a8a] text-[#1e3a8a] px-4 py-1 flex items-center">
+          <div className="flex mb-2 text-xs font-bold">
+            <div className="border-2 border-[#1e3a8a] text-[#1e3a8a] px-3 py-0.5 flex items-center">
               Class ID ➔
             </div>
-            <div className="border-2 border-l-0 border-[#1e3a8a] text-blue-700 px-12 py-1 flex items-center">
+            <div className="border-2 border-l-0 border-[#1e3a8a] text-blue-700 px-8 py-0.5 flex items-center">
               {result.className || '-'}
             </div>
           </div>
 
           {/* Student Info Table */}
-          <div className="mb-4">
-            <div className="bg-[#1e3a8a] text-white px-2 py-1 text-xs font-bold uppercase">STUDENT INFORMATION</div>
+          <div className="mb-2">
+            <div className="bg-[#1e3a8a] text-white px-2 py-0.5 text-[11px] font-bold uppercase">STUDENT INFORMATION</div>
             <table className="w-full border-collapse border border-slate-300 text-xs font-bold">
               <tbody>
                 <tr>
-                  <td className="border border-slate-300 bg-[#f8fafc] px-2 py-1.5 w-1/4">Roll No</td>
-                  <td className="border border-slate-300 px-2 py-1.5 text-center text-green-700 w-1/4">{result.rollNumber}</td>
-                  <td className="border border-slate-300 bg-[#f8fafc] px-2 py-1.5 w-1/4">Student Name</td>
-                  <td className="border border-slate-300 px-2 py-1.5 text-center text-green-700 w-1/4">{result.studentName || '-'}</td>
+                  <td className="border border-slate-300 bg-[#f8fafc] px-2 py-1 w-1/4">Roll No</td>
+                  <td className="border border-slate-300 px-2 py-1 text-center text-green-700 w-1/4">{result.rollNumber}</td>
+                  <td className="border border-slate-300 bg-[#f8fafc] px-2 py-1 w-1/4">Student Name</td>
+                  <td className="border border-slate-300 px-2 py-1 text-center text-green-700 w-1/4">{result.studentName || '-'}</td>
                 </tr>
                 <tr>
-                  <td className="border border-slate-300 bg-[#f8fafc] px-2 py-1.5">Father Name</td>
-                  <td className="border border-slate-300 px-2 py-1.5 text-center text-green-700">{result.fatherName || '-'}</td>
-                  <td className="border border-slate-300 bg-[#f8fafc] px-2 py-1.5">Class</td>
-                  <td className="border border-slate-300 px-2 py-1.5 text-center text-green-700">{result.className || '-'}</td>
+                  <td className="border border-slate-300 bg-[#f8fafc] px-2 py-1">Father Name</td>
+                  <td className="border border-slate-300 px-2 py-1 text-center text-green-700">{result.fatherName || '-'}</td>
+                  <td className="border border-slate-300 bg-[#f8fafc] px-2 py-1">Class</td>
+                  <td className="border border-slate-300 px-2 py-1 text-center text-green-700">{result.className || '-'}</td>
                 </tr>
                 <tr>
-                  <td className="border border-slate-300 bg-[#f8fafc] px-2 py-1.5">Section</td>
-                  <td className="border border-slate-300 px-2 py-1.5 text-center text-green-700">{result.section || '-'}</td>
-                  <td className="border border-slate-300 px-2 py-1.5 bg-white" colSpan={2}></td>
+                  <td className="border border-slate-300 bg-[#f8fafc] px-2 py-1">Section</td>
+                  <td className="border border-slate-300 px-2 py-1 text-center text-green-700">{result.section || '-'}</td>
+                  <td className="border border-slate-300 px-2 py-1 bg-white" colSpan={2}></td>
                 </tr>
               </tbody>
             </table>
           </div>
 
           {/* Subjects Table */}
-          <div className="mb-4">
-            <div className="bg-[#1e3a8a] text-white px-2 py-1 text-xs font-bold uppercase">SUBJECT-WISE RESULT</div>
+          <div className="mb-2">
+            <div className="bg-[#1e3a8a] text-white px-2 py-0.5 text-[11px] font-bold uppercase">SUBJECT-WISE RESULT</div>
             <table className="w-full border-collapse border border-slate-300 text-xs font-bold">
               <thead>
                 <tr className="bg-[#d97706] text-white">
-                  <th className="border border-slate-300 px-2 py-1.5 text-center">Subject</th>
-                  <th className="border border-slate-300 px-2 py-1.5 text-center">Total Marks</th>
-                  <th className="border border-slate-300 px-2 py-1.5 text-center">Obtained Marks</th>
-                  <th className="border border-slate-300 px-2 py-1.5 text-center">Percentage (Grade)</th>
-                  <th className="border border-slate-300 px-2 py-1.5 text-center">Status</th>
+                  <th className="border border-slate-300 px-2 py-1 text-center">Subject</th>
+                  <th className="border border-slate-300 px-2 py-1 text-center">Total Marks</th>
+                  <th className="border border-slate-300 px-2 py-1 text-center">Obtained Marks</th>
+                  <th className="border border-slate-300 px-2 py-1 text-center">Percentage (Grade)</th>
+                  <th className="border border-slate-300 px-2 py-1 text-center">Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -231,67 +230,67 @@ export default function ResultCard({ result, exam }: ResultCardProps) {
                   const subStatus = sub.percentage != null && sub.percentage >= 33 ? 'Pass' : 'Fail';
                   return (
                     <tr key={idx}>
-                      <td className="border border-slate-300 px-2 py-1.5 text-center">{sub.subjectName}</td>
-                      <td className="border border-slate-300 px-2 py-1.5 text-center text-green-700">{sub.totalMarks}</td>
-                      <td className="border border-slate-300 px-2 py-1.5 text-center text-green-700">{sub.obtainedMarks}</td>
-                      <td className="border border-slate-300 px-2 py-1.5 text-center text-green-700">
+                      <td className="border border-slate-300 px-2 py-1 text-center">{sub.subjectName}</td>
+                      <td className="border border-slate-300 px-2 py-1 text-center text-green-700">{sub.totalMarks}</td>
+                      <td className="border border-slate-300 px-2 py-1 text-center text-green-700">{sub.obtainedMarks}</td>
+                      <td className="border border-slate-300 px-2 py-1 text-center text-green-700">
                         {sub.percentage != null ? `${Math.round(sub.percentage)}%` : '-'} {sub.grade ? `(${sub.grade})` : ''}
                       </td>
-                      <td className={cn("border border-slate-300 px-2 py-1.5 text-center", subStatus === 'Pass' ? 'text-green-700' : 'text-red-600')}>{subStatus}</td>
+                      <td className={cn("border border-slate-300 px-2 py-1 text-center", subStatus === 'Pass' ? 'text-green-700' : 'text-red-600')}>{subStatus}</td>
                     </tr>
                   );
                 })}
-                {/* Fill empty rows to make it look like a standard card if subjects are few */}
-                {Array.from({ length: Math.max(0, 5 - mainSubjects.length) }).map((_, i) => (
+                {/* Fill empty rows to keep card balanced if subjects are few */}
+                {Array.from({ length: Math.max(0, 3 - mainSubjects.length) }).map((_, i) => (
                   <tr key={`empty-${i}`}>
-                    <td className="border border-slate-300 px-2 py-3"></td>
-                    <td className="border border-slate-300 px-2 py-3"></td>
-                    <td className="border border-slate-300 px-2 py-3"></td>
-                    <td className="border border-slate-300 px-2 py-3"></td>
-                    <td className="border border-slate-300 px-2 py-3"></td>
+                    <td className="border border-slate-300 px-2 py-1">&nbsp;</td>
+                    <td className="border border-slate-300 px-2 py-1"></td>
+                    <td className="border border-slate-300 px-2 py-1"></td>
+                    <td className="border border-slate-300 px-2 py-1"></td>
+                    <td className="border border-slate-300 px-2 py-1"></td>
                   </tr>
                 ))}
                 <tr className="bg-[#1e3a8a] text-white">
-                  <td className="border border-slate-400 px-2 py-2 text-center uppercase tracking-wider">GRAND TOTAL</td>
-                  <td className="border border-slate-400 px-2 py-2 text-center">{trueTotal}</td>
-                  <td className="border border-slate-400 px-2 py-2 text-center">{trueObtained}</td>
-                  <td className="border border-slate-400 px-2 py-2 text-center">{truePercentage.toFixed(2)}%</td>
-                  <td className="border border-slate-400 px-2 py-2 text-center">{trueStatus}</td>
+                  <td className="border border-slate-400 px-2 py-1 text-center uppercase tracking-wider">GRAND TOTAL</td>
+                  <td className="border border-slate-400 px-2 py-1 text-center">{trueTotal}</td>
+                  <td className="border border-slate-400 px-2 py-1 text-center">{trueObtained}</td>
+                  <td className="border border-slate-400 px-2 py-1 text-center">{truePercentage.toFixed(2)}%</td>
+                  <td className="border border-slate-400 px-2 py-1 text-center">{trueStatus}</td>
                 </tr>
               </tbody>
             </table>
           </div>
 
           {/* Overall Summary row */}
-          <div className="flex justify-between items-center mb-6 px-2 font-bold text-sm max-w-lg">
+          <div className="flex justify-between items-center mb-2 px-2 font-bold text-xs max-w-lg">
             <div>
               <span className="text-slate-800 mr-2">Overall Grade:</span>
-              <span className="text-[#d97706] text-lg">{result.grade || (truePercentage >= 80 ? 'A' : truePercentage >= 70 ? 'B' : truePercentage >= 60 ? 'C' : 'D')}</span>
+              <span className="text-[#d97706] text-base">{result.grade || (truePercentage >= 80 ? 'A' : truePercentage >= 70 ? 'B' : truePercentage >= 60 ? 'C' : 'D')}</span>
             </div>
             <div>
               <span className="text-slate-800 mr-2">Overall Result:</span>
-              <span className={cn("text-lg", trueStatus === 'Pass' ? 'text-green-700' : 'text-red-600')}>
+              <span className={cn("text-base", trueStatus === 'Pass' ? 'text-green-700' : 'text-red-600')}>
                 {result.resultStatus || trueStatus}
               </span>
             </div>
           </div>
 
           {/* Attendance Report */}
-          <div className="mb-4">
-            <div className="bg-[#1e3a8a] text-white px-2 py-1 text-xs font-bold uppercase">ATTENDANCE REPORT</div>
+          <div className="mb-2">
+            <div className="bg-[#1e3a8a] text-white px-2 py-0.5 text-[11px] font-bold uppercase">ATTENDANCE REPORT</div>
             <table className="w-full border-collapse border border-slate-300 text-xs font-bold">
               <tbody>
                 <tr>
-                  <td className="border border-slate-300 bg-[#f8fafc] px-2 py-1.5 w-[20%]">Total Working Days</td>
-                  <td className="border border-slate-300 px-2 py-1.5 text-center text-green-700 w-[15%]">{attendanceSub?.totalMarks || 100}</td>
-                  <td className="border border-slate-300 bg-[#f8fafc] px-2 py-1.5 w-[20%] text-center">Days Present</td>
-                  <td className="border border-slate-300 px-2 py-1.5 text-center text-green-700 w-[15%]">{attendanceSub?.obtainedMarks || 0}</td>
-                  <td className="border border-slate-300 bg-[#f8fafc] px-2 py-1.5 w-[15%] text-center">Attendance %</td>
-                  <td className="border border-slate-300 px-2 py-1.5 text-center text-green-700 w-[15%]">
+                  <td className="border border-slate-300 bg-[#f8fafc] px-2 py-1 w-[20%]">Total Working Days</td>
+                  <td className="border border-slate-300 px-2 py-1 text-center text-green-700 w-[15%]">{attendanceSub?.totalMarks || 100}</td>
+                  <td className="border border-slate-300 bg-[#f8fafc] px-2 py-1 w-[20%] text-center">Days Present</td>
+                  <td className="border border-slate-300 px-2 py-1 text-center text-green-700 w-[15%]">{attendanceSub?.obtainedMarks || 0}</td>
+                  <td className="border border-slate-300 bg-[#f8fafc] px-2 py-1 w-[15%] text-center">Attendance %</td>
+                  <td className="border border-slate-300 px-2 py-1 text-center text-green-700 w-[15%]">
                     {attendanceSub && attendanceSub.totalMarks > 0 ? Math.round((attendanceSub.obtainedMarks / attendanceSub.totalMarks) * 100) : 0}%
                   </td>
-                  <td className="border border-slate-300 bg-[#f8fafc] px-2 py-1.5 text-center">Status</td>
-                  <td className="border border-slate-300 px-2 py-1.5 text-center text-red-600">
+                  <td className="border border-slate-300 bg-[#f8fafc] px-2 py-1 text-center">Status</td>
+                  <td className="border border-slate-300 px-2 py-1 text-center text-red-600">
                     {(attendanceSub && attendanceSub.totalMarks > 0 ? (attendanceSub.obtainedMarks / attendanceSub.totalMarks) * 100 : 0) >= 75 ? <span className="text-green-700">Pass</span> : 'Fail'}
                   </td>
                 </tr>
@@ -300,99 +299,99 @@ export default function ResultCard({ result, exam }: ResultCardProps) {
           </div>
           
           {/* Discipline Report */}
-          <div className="mb-4">
-            <div className="bg-[#1e3a8a] text-white px-2 py-1 text-xs font-bold uppercase">DISCIPLINE REPORT</div>
+          <div className="mb-2">
+            <div className="bg-[#1e3a8a] text-white px-2 py-0.5 text-[11px] font-bold uppercase">DISCIPLINE REPORT</div>
             <table className="w-full border-collapse border border-slate-300 text-xs font-bold">
               <tbody>
                 <tr>
-                  <td className="border border-slate-300 bg-[#f8fafc] px-2 py-1.5 w-[20%]">Discipline Marks</td>
-                  <td className="border border-slate-300 px-2 py-1.5 text-center text-green-700 w-[15%]">{disciplineSub?.obtainedMarks || 0} / {disciplineSub?.totalMarks || 100}</td>
-                  <td className="border border-slate-300 bg-[#f8fafc] px-2 py-1.5 w-[20%] text-center">Discipline %</td>
-                  <td className="border border-slate-300 px-2 py-1.5 text-center text-green-700 w-[15%]">
+                  <td className="border border-slate-300 bg-[#f8fafc] px-2 py-1 w-[20%]">Discipline Marks</td>
+                  <td className="border border-slate-300 px-2 py-1 text-center text-green-700 w-[15%]">{disciplineSub?.obtainedMarks || 0} / {disciplineSub?.totalMarks || 100}</td>
+                  <td className="border border-slate-300 bg-[#f8fafc] px-2 py-1 w-[20%] text-center">Discipline %</td>
+                  <td className="border border-slate-300 px-2 py-1 text-center text-green-700 w-[15%]">
                     {disciplineSub && disciplineSub.totalMarks > 0 ? Math.round((disciplineSub.obtainedMarks / disciplineSub.totalMarks) * 100) : 0}%
                   </td>
-                  <td className="border border-slate-300 bg-[#f8fafc] px-2 py-1.5 text-center" colSpan={2}></td>
-                  <td className="border border-slate-300 bg-[#f8fafc] px-2 py-1.5 text-center">Status</td>
-                  <td className="border border-slate-300 px-2 py-1.5 text-center text-green-700">Pass</td>
+                  <td className="border border-slate-300 bg-[#f8fafc] px-2 py-1 text-center" colSpan={2}></td>
+                  <td className="border border-slate-300 bg-[#f8fafc] px-2 py-1 text-center">Status</td>
+                  <td className="border border-slate-300 px-2 py-1 text-center text-green-700">Pass</td>
                 </tr>
               </tbody>
             </table>
           </div>
 
           {/* Previous Monthly Test Report */}
-          <div className="mb-6">
-            <div className="bg-[#1e3a8a] text-white px-2 py-1 text-xs font-bold uppercase">PREVIOUS MONTHLY TEST REPORT (Month 1 / 2 / 3 — blank if not held)</div>
+          <div className="mb-2">
+            <div className="bg-[#1e3a8a] text-white px-2 py-0.5 text-[11px] font-bold uppercase">PREVIOUS MONTHLY TEST REPORT</div>
             <table className="w-full max-w-xl border-collapse border border-slate-300 text-xs font-bold">
               <thead>
                 <tr className="bg-[#d97706] text-white">
-                  <th className="border border-slate-300 px-2 py-1.5 text-center">Month</th>
-                  <th className="border border-slate-300 px-2 py-1.5 text-center">Total</th>
-                  <th className="border border-slate-300 px-2 py-1.5 text-center">Obtained</th>
-                  <th className="border border-slate-300 px-2 py-1.5 text-center">Percentage</th>
+                  <th className="border border-slate-300 px-2 py-1 text-center">Month</th>
+                  <th className="border border-slate-300 px-2 py-1 text-center">Total</th>
+                  <th className="border border-slate-300 px-2 py-1 text-center">Obtained</th>
+                  <th className="border border-slate-300 px-2 py-1 text-center">Percentage</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <td className="border border-slate-300 bg-[#f8fafc] px-2 py-1.5 text-center">Month 1</td>
-                  <td className="border border-slate-300 px-2 py-1.5 text-center text-green-700">{m1?.totalMarks || 0}</td>
-                  <td className="border border-slate-300 px-2 py-1.5 text-center text-green-700">{m1?.obtainedMarks || 0}</td>
-                  <td className="border border-slate-300 px-2 py-1.5 text-center text-green-700">{m1 && m1.totalMarks > 0 ? ((m1.obtainedMarks / m1.totalMarks)*100).toFixed(2) : ''}%</td>
+                  <td className="border border-slate-300 bg-[#f8fafc] px-2 py-1 text-center">Month 1</td>
+                  <td className="border border-slate-300 px-2 py-1 text-center text-green-700">{m1?.totalMarks || 0}</td>
+                  <td className="border border-slate-300 px-2 py-1 text-center text-green-700">{m1?.obtainedMarks || 0}</td>
+                  <td className="border border-slate-300 px-2 py-1 text-center text-green-700">{m1 && m1.totalMarks > 0 ? ((m1.obtainedMarks / m1.totalMarks)*100).toFixed(2) : ''}%</td>
                 </tr>
                 <tr>
-                  <td className="border border-slate-300 bg-[#f8fafc] px-2 py-1.5 text-center">Month 2</td>
-                  <td className="border border-slate-300 px-2 py-1.5 text-center text-green-700">{m2?.totalMarks || 0}</td>
-                  <td className="border border-slate-300 px-2 py-1.5 text-center text-green-700">{m2?.obtainedMarks || 0}</td>
-                  <td className="border border-slate-300 px-2 py-1.5 text-center text-green-700">{m2 && m2.totalMarks > 0 ? ((m2.obtainedMarks / m2.totalMarks)*100).toFixed(2) : ''}%</td>
+                  <td className="border border-slate-300 bg-[#f8fafc] px-2 py-1 text-center">Month 2</td>
+                  <td className="border border-slate-300 px-2 py-1 text-center text-green-700">{m2?.totalMarks || 0}</td>
+                  <td className="border border-slate-300 px-2 py-1 text-center text-green-700">{m2?.obtainedMarks || 0}</td>
+                  <td className="border border-slate-300 px-2 py-1 text-center text-green-700">{m2 && m2.totalMarks > 0 ? ((m2.obtainedMarks / m2.totalMarks)*100).toFixed(2) : ''}%</td>
                 </tr>
                 <tr>
-                  <td className="border border-slate-300 bg-[#f8fafc] px-2 py-1.5 text-center">Month 3</td>
-                  <td className="border border-slate-300 px-2 py-1.5 text-center text-green-700">{m3?.totalMarks || 0}</td>
-                  <td className="border border-slate-300 px-2 py-1.5 text-center text-green-700">{m3?.obtainedMarks || 0}</td>
-                  <td className="border border-slate-300 px-2 py-1.5 text-center text-green-700">{m3 && m3.totalMarks > 0 ? ((m3.obtainedMarks / m3.totalMarks)*100).toFixed(2) : ''}%</td>
+                  <td className="border border-slate-300 bg-[#f8fafc] px-2 py-1 text-center">Month 3</td>
+                  <td className="border border-slate-300 px-2 py-1 text-center text-green-700">{m3?.totalMarks || 0}</td>
+                  <td className="border border-slate-300 px-2 py-1 text-center text-green-700">{m3?.obtainedMarks || 0}</td>
+                  <td className="border border-slate-300 px-2 py-1 text-center text-green-700">{m3 && m3.totalMarks > 0 ? ((m3.obtainedMarks / m3.totalMarks)*100).toFixed(2) : ''}%</td>
                 </tr>
                 <tr className="bg-[#1e3a8a] text-white">
-                  <td className="border border-slate-400 px-2 py-1.5 text-center">Average</td>
-                  <td className="border border-slate-400 px-2 py-1.5 text-center" colSpan={2}>Average Percentage / Grade ➔</td>
-                  <td className="border border-slate-400 px-2 py-1.5 text-center">{mCount > 0 ? `${mAvgPerc.toFixed(2)}% (${mAvgGrade})` : ''}</td>
+                  <td className="border border-slate-400 px-2 py-1 text-center">Average</td>
+                  <td className="border border-slate-400 px-2 py-1 text-center" colSpan={2}>Average Percentage / Grade ➔</td>
+                  <td className="border border-slate-400 px-2 py-1 text-center">{mCount > 0 ? `${mAvgPerc.toFixed(2)}% (${mAvgGrade})` : ''}</td>
                 </tr>
               </tbody>
             </table>
           </div>
 
           {/* Remarks */}
-          <div className="mb-12">
-            <div className="bg-[#1e3a8a] text-white px-2 py-1 text-xs font-bold uppercase">REMARKS</div>
+          <div className="mb-4">
+            <div className="bg-[#1e3a8a] text-white px-2 py-0.5 text-[11px] font-bold uppercase">REMARKS</div>
             <table className="w-full border-collapse border border-slate-300 text-xs font-bold">
               <tbody>
                 <tr>
-                  <td className="border border-slate-300 bg-[#f8fafc] px-2 py-2 w-32">Academic:</td>
-                  <td className="border border-slate-300 px-2 py-2 italic text-green-700 font-normal">{result.remarks || 'Excellent performance. Keep it up!'}</td>
+                  <td className="border border-slate-300 bg-[#f8fafc] px-2 py-1 w-28">Academic:</td>
+                  <td className="border border-slate-300 px-2 py-1 italic text-green-700 font-normal">{result.remarks || 'Excellent performance. Keep it up!'}</td>
                 </tr>
                 <tr>
-                  <td className="border border-slate-300 bg-[#f8fafc] px-2 py-2 w-32">Attendance:</td>
-                  <td className="border border-slate-300 px-2 py-2 italic text-red-600 font-normal">Attendance is below the required level. Please ensure regular attendance.</td>
+                  <td className="border border-slate-300 bg-[#f8fafc] px-2 py-1 w-28">Attendance:</td>
+                  <td className="border border-slate-300 px-2 py-1 italic text-red-600 font-normal">Attendance is below the required level. Please ensure regular attendance.</td>
                 </tr>
                 <tr>
-                  <td className="border border-slate-300 bg-[#f8fafc] px-2 py-2 w-32">Discipline:</td>
-                  <td className="border border-slate-300 px-2 py-2 font-normal"></td>
+                  <td className="border border-slate-300 bg-[#f8fafc] px-2 py-1 w-28">Discipline:</td>
+                  <td className="border border-slate-300 px-2 py-1 font-normal"></td>
                 </tr>
               </tbody>
             </table>
           </div>
 
           {/* Signatures */}
-          <div className="grid grid-cols-3 gap-4 mt-8 pt-4 pb-4">
+          <div className="grid grid-cols-3 gap-4 mt-4 pt-2 pb-2">
             <div className="text-center">
-              <div className="border-b border-black w-40 mx-auto mb-1 h-8"></div>
-              <p className="text-[11px] font-bold text-black">Parent / Guardian Signature</p>
+              <div className="border-b border-black w-32 sm:w-36 mx-auto mb-1 h-6"></div>
+              <p className="text-[10px] font-bold text-black uppercase">Parent / Guardian</p>
             </div>
             <div className="text-center">
-              <div className="border-b border-black w-40 mx-auto mb-1 h-8"></div>
-              <p className="text-[11px] font-bold text-black">Class Teacher Signature</p>
+              <div className="border-b border-black w-32 sm:w-36 mx-auto mb-1 h-6"></div>
+              <p className="text-[10px] font-bold text-black uppercase">Class Teacher</p>
             </div>
             <div className="text-center">
-              <div className="border-b border-black w-40 mx-auto mb-1 h-8"></div>
-              <p className="text-[11px] font-bold text-black">Principal Signature</p>
+              <div className="border-b border-black w-32 sm:w-36 mx-auto mb-1 h-6"></div>
+              <p className="text-[10px] font-bold text-black uppercase">Principal</p>
             </div>
           </div>
 
