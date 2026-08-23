@@ -35,31 +35,63 @@ export default function ResultCard({ result, exam }: ResultCardProps) {
     const element = document.getElementById('result-card-content');
     if (!element) return null;
 
+    // Create an isolated fixed wrapper at top-left
+    const wrapper = document.createElement('div');
+    wrapper.style.position = 'fixed';
+    wrapper.style.left = '0';
+    wrapper.style.top = '0';
+    wrapper.style.width = '800px';
+    wrapper.style.minWidth = '800px';
+    wrapper.style.maxWidth = '800px';
+    wrapper.style.zIndex = '-99999';
+    wrapper.style.backgroundColor = '#ffffff';
+    wrapper.style.overflow = 'visible';
+    wrapper.style.margin = '0';
+    wrapper.style.padding = '0';
+    wrapper.style.boxSizing = 'border-box';
+
+    const clone = element.cloneNode(true) as HTMLElement;
+    clone.id = 'result-card-clone-render';
+    clone.style.width = '800px';
+    clone.style.minWidth = '800px';
+    clone.style.maxWidth = '800px';
+    clone.style.margin = '0';
+    clone.style.padding = '0';
+    clone.style.boxShadow = 'none';
+    clone.style.border = 'none';
+    clone.style.backgroundColor = '#ffffff';
+
+    wrapper.appendChild(clone);
+    document.body.appendChild(wrapper);
+
+    // Give browser 100ms to render layout/fonts cleanly
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
     try {
-      // Use html2canvas with explicit clean options to prevent mobile offsets / black borders
-      const canvas = await html2canvas(element, {
+      const canvas = await html2canvas(clone, {
         scale: 2,
         useCORS: true,
+        allowTaint: true,
         backgroundColor: '#ffffff',
+        width: 800,
+        height: clone.scrollHeight,
+        windowWidth: 800,
+        windowHeight: clone.scrollHeight,
         scrollX: 0,
         scrollY: 0,
+        x: 0,
+        y: 0,
         logging: false,
-        onclone: (clonedDoc) => {
-          const card = clonedDoc.getElementById('result-card-content');
-          if (card) {
-            card.style.width = '800px';
-            card.style.maxWidth = '800px';
-            card.style.minWidth = '800px';
-            card.style.margin = '0 auto';
-            card.style.padding = '0';
-            card.style.boxShadow = 'none';
-            card.style.border = 'none';
-          }
-        }
       });
+      if (document.body.contains(wrapper)) {
+        document.body.removeChild(wrapper);
+      }
       return canvas.toDataURL('image/jpeg', 0.95);
     } catch (err) {
-      console.warn('html2canvas failed, trying html-to-image fallback:', err);
+      if (document.body.contains(wrapper)) {
+        document.body.removeChild(wrapper);
+      }
+      console.warn('html2canvas failed, trying toJpeg fallback:', err);
       return await toJpeg(element, {
         quality: 0.95,
         pixelRatio: 2,
