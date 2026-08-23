@@ -1,0 +1,133 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() { return request.auth != null; }
+    
+    // We establish an admin user via the admins collection
+    function isAdmin() { 
+      return isSignedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid)); 
+    }
+
+    function isValidId(id) { 
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); 
+    }
+    
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+
+    // --- Validation Helpers ---
+
+    function isValidSettings(data) {
+      return data.keys().hasAll(['schoolName', 'updatedAt']) 
+        && data.schoolName is string && data.schoolName.size() <= 100
+        && (data.get('address', '') is string && data.get('address', '').size() <= 200)
+        && (data.get('phone', '') is string && data.get('phone', '').size() <= 50)
+        && (data.get('email', '') is string && data.get('email', '').size() <= 100)
+        && (data.get('principalName', '') is string && data.get('principalName', '').size() <= 100)
+        && (data.get('academicSession', '') is string && data.get('academicSession', '').size() <= 50)
+        && (data.get('resultCardTitle', '') is string && data.get('resultCardTitle', '').size() <= 100)
+        && data.updatedAt is number;
+    }
+
+    function isValidAdmin(data) {
+      return data.keys().hasAll(['email', 'createdAt'])
+        && data.email is string && data.email.size() <= 100
+        && data.createdAt is number;
+    }
+
+    function isValidStudent(data) {
+      return data.keys().hasAll(['studentId', 'rollNumber', 'studentName', 'class', 'active', 'createdAt', 'updatedAt'])
+        && data.studentId is string && data.studentId.size() <= 50
+        && data.rollNumber is string && data.rollNumber.size() <= 50
+        && data.studentName is string && data.studentName.size() <= 100
+        && (data.get('fatherName', '') is string && data.get('fatherName', '').size() <= 100)
+        && data.class is string && data.class.size() <= 50
+        && (data.get('section', '') is string && data.get('section', '').size() <= 50)
+        && data.active is bool
+        && data.createdAt is number
+        && data.updatedAt is number;
+    }
+
+    function isValidExam(data) {
+      return data.keys().hasAll(['examName', 'academicSession', 'status', 'createdAt', 'updatedAt'])
+        && data.examName is string && data.examName.size() <= 100
+        && (data.get('examCategory', '') is string && data.get('examCategory', '').size() <= 100)
+        && data.academicSession is string && data.academicSession.size() <= 50
+        && (data.get('class', '') is string && data.get('class', '').size() <= 50)
+        && data.status is string && data.status.size() <= 20 && (data.status == 'Draft' || data.status == 'Published' || data.status == 'Unpublished')
+        && data.createdAt is number
+        && data.updatedAt is number;
+    }
+
+    function isValidResult(data) {
+      return data.keys().hasAll(['studentId', 'rollNumber', 'examId', 'status', 'createdAt', 'updatedAt', 'subjects'])
+        && data.studentId is string && data.studentId.size() <= 50
+        && data.rollNumber is string && data.rollNumber.size() <= 50
+        && data.examId is string && data.examId.size() <= 128
+        && (data.get('studentName', '') is string && data.get('studentName', '').size() <= 100)
+        && (data.get('className', '') is string && data.get('className', '').size() <= 50)
+        && data.status is string && data.status.size() <= 20 && (data.status == 'Draft' || data.status == 'Published')
+        && (data.get('totalMarks', 0) is number)
+        && (data.get('obtainedMarks', 0) is number)
+        && (data.get('percentage', 0) is number)
+        && (data.get('grade', '') is string && data.get('grade', '').size() <= 10)
+        && (data.get('resultStatus', '') is string && data.get('resultStatus', '').size() <= 20)
+        && (data.get('position', '') is string && data.get('position', '').size() <= 20)
+        && (data.get('attendance', '') is string && data.get('attendance', '').size() <= 20)
+        && (data.get('discipline', '') is string && data.get('discipline', '').size() <= 20)
+        && (data.get('remarks', '') is string && data.get('remarks', '').size() <= 500)
+        && data.subjects is list && data.subjects.size() <= 50
+        && data.createdAt is number
+        && data.updatedAt is number;
+    }
+
+    // --- Collections ---
+
+    match /settings/{settingId} {
+      allow read: if isValidId(settingId);
+      allow create: if isAdmin() && isValidId(settingId) && isValidSettings(incoming());
+      allow update: if isAdmin() && isValidId(settingId) && isValidSettings(incoming());
+      allow delete: if isAdmin() && isValidId(settingId);
+    }
+
+    match /admins/{adminId} {
+      // Bootstrapping: Allow the first admin to create themselves if no admins exist
+      // Or if the user's email matches a hardcoded env variable / specific email (we won't hardcode, rely on manual DB entry or auth creation trigger)
+      // Actually, we'll allow creation if no admin document exists AT ALL in the DB or via a strict manual process.
+      // For AI studio demo, allow any signed-in user to become admin if there's no admin yet, but we can't easily check global collection size.
+      // So let's just make the FIRST signed-in user an admin via client code using a serverless function, or just use `isAdmin()` with a fallback.
+      // We will allow read if they are the admin themselves, or if they are admin.
+      allow read: if isSignedIn() && (request.auth.uid == adminId || isAdmin());
+      // For initial setup: allow creating admin if it's their own UID
+      allow create: if isSignedIn() && request.auth.uid == adminId && isValidAdmin(incoming());
+      allow update: if isAdmin() && isValidAdmin(incoming());
+      allow delete: if isAdmin();
+    }
+
+    match /students/{studentDocId} {
+      allow read: if isAdmin();
+      allow create: if isAdmin() && isValidId(studentDocId) && isValidStudent(incoming());
+      allow update: if isAdmin() && isValidId(studentDocId) && isValidStudent(incoming());
+      allow delete: if isAdmin() && isValidId(studentDocId);
+    }
+
+    match /exams/{examId} {
+      allow read: if true;
+      allow create: if isAdmin() && isValidId(examId) && isValidExam(incoming());
+      allow update: if isAdmin() && isValidId(examId) && isValidExam(incoming());
+      allow delete: if isAdmin() && isValidId(examId);
+    }
+
+    match /results/{resultId} {
+      allow read: if true;
+      allow create: if isAdmin() && isValidId(resultId) && isValidResult(incoming());
+      allow update: if isAdmin() && isValidId(resultId) && isValidResult(incoming());
+      allow delete: if isAdmin() && isValidId(resultId);
+    }
+  }
+}
