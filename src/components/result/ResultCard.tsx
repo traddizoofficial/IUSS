@@ -35,37 +35,40 @@ export default function ResultCard({ result, exam }: ResultCardProps) {
     const element = document.getElementById('result-card-content');
     if (!element) return null;
 
-    // Create an isolated fixed wrapper at top-left
-    const wrapper = document.createElement('div');
-    wrapper.style.position = 'fixed';
-    wrapper.style.left = '0';
-    wrapper.style.top = '0';
-    wrapper.style.width = '800px';
-    wrapper.style.minWidth = '800px';
-    wrapper.style.maxWidth = '800px';
-    wrapper.style.zIndex = '-99999';
-    wrapper.style.backgroundColor = '#ffffff';
-    wrapper.style.overflow = 'visible';
-    wrapper.style.margin = '0';
-    wrapper.style.padding = '0';
-    wrapper.style.boxSizing = 'border-box';
+    // Create a dedicated top-level overlay container
+    const overlay = document.createElement('div');
+    overlay.id = 'print-capture-overlay';
+    overlay.style.position = 'fixed';
+    overlay.style.top = '0';
+    overlay.style.left = '0';
+    overlay.style.width = '820px';
+    overlay.style.minWidth = '820px';
+    overlay.style.maxWidth = '820px';
+    overlay.style.height = 'auto';
+    overlay.style.zIndex = '999999';
+    overlay.style.backgroundColor = '#ffffff';
+    overlay.style.overflow = 'visible';
+    overlay.style.margin = '0';
+    overlay.style.padding = '10px';
+    overlay.style.boxSizing = 'border-box';
 
+    // Clone the result card
     const clone = element.cloneNode(true) as HTMLElement;
-    clone.id = 'result-card-clone-render';
+    clone.id = 'result-card-clone-rendered';
     clone.style.width = '800px';
     clone.style.minWidth = '800px';
     clone.style.maxWidth = '800px';
-    clone.style.margin = '0';
+    clone.style.margin = '0 auto';
     clone.style.padding = '0';
     clone.style.boxShadow = 'none';
     clone.style.border = 'none';
     clone.style.backgroundColor = '#ffffff';
 
-    wrapper.appendChild(clone);
-    document.body.appendChild(wrapper);
+    overlay.appendChild(clone);
+    document.body.appendChild(overlay);
 
-    // Give browser 100ms to render layout/fonts cleanly
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    // Ensure all DOM nodes and layouts are settled
+    await new Promise((resolve) => setTimeout(resolve, 250));
 
     try {
       const canvas = await html2canvas(clone, {
@@ -75,29 +78,35 @@ export default function ResultCard({ result, exam }: ResultCardProps) {
         backgroundColor: '#ffffff',
         width: 800,
         height: clone.scrollHeight,
-        windowWidth: 800,
-        windowHeight: clone.scrollHeight,
+        windowWidth: 820,
+        windowHeight: clone.scrollHeight + 50,
         scrollX: 0,
         scrollY: 0,
         x: 0,
         y: 0,
         logging: false,
       });
-      if (document.body.contains(wrapper)) {
-        document.body.removeChild(wrapper);
-      }
-      return canvas.toDataURL('image/jpeg', 0.95);
+
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+      return dataUrl;
     } catch (err) {
-      if (document.body.contains(wrapper)) {
-        document.body.removeChild(wrapper);
+      console.warn('html2canvas error, using toJpeg fallback:', err);
+      try {
+        return await toJpeg(clone, {
+          quality: 0.95,
+          pixelRatio: 2,
+          backgroundColor: '#ffffff',
+          width: 800,
+          height: clone.scrollHeight,
+        });
+      } catch (e2) {
+        console.error('toJpeg failed too:', e2);
+        return null;
       }
-      console.warn('html2canvas failed, trying toJpeg fallback:', err);
-      return await toJpeg(element, {
-        quality: 0.95,
-        pixelRatio: 2,
-        backgroundColor: '#ffffff',
-        cacheBust: true,
-      });
+    } finally {
+      if (document.body.contains(overlay)) {
+        document.body.removeChild(overlay);
+      }
     }
   };
 
