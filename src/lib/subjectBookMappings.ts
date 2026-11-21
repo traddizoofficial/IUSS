@@ -71,3 +71,37 @@ export function sortSubjectNames(names: string[]): string[] {
 export function isGenericSubjectName(name: string): boolean {
   return /^subject\s*\d+$/i.test((name || '').trim());
 }
+
+const EXACT_NON_SUBJECT_COMPACT = new Set([
+  'sr', 'srno', 'sno', 'serial', 'serialno',
+  'roll', 'rollno', 'rollnumber',
+  'studentid', 'stdid', 'classid', 'id', 'regno', 'admno',
+  'name', 'studentname', 'fathername', 'class', 'classname', 'section',
+  'phone', 'mobile', 'contact', 'cell', 'cnic', 'bform', 'dob', 'dateofbirth',
+  'address', 'gender', 'sex',
+  'total', 'grand', 'grandtotal', 'grandobtained', 'totalmarks', 'obtained', 'obtainedmarks', 'obt', 'obtmarks',
+  'overall', 'overallpercentage', 'overallgrade', 'percentage', 'grade', 'status', 'result', 'resultstatus', 'passfail',
+  'position', 'rank', 'division', 'remarks', 'discipline',
+  'subjectsfailed', 'subjectfailed', 'failedsubjects', 'failed', 'failcount',
+  'classslot', 'slot', 'idkey', 'key', 'helper',
+]);
+
+export function isNonSubjectColumn(name: string, options?: { allowMonthlyTests?: boolean }): boolean {
+  const trimmed = (name || '').trim();
+  if (!trimmed) return true;
+
+  const lower = trimmed.toLowerCase();
+  const compact = lower.replace(/[^a-z0-9]/g, '');
+
+  if (!compact) return true;
+  if (/^column\s*\d+(\s*\(\d+\))?$/i.test(trimmed)) return true;
+  if (lower.includes('(auto)')) return true;
+  if (!options?.allowMonthlyTests && lower.includes('month')) return true;
+  if (lower.includes('discipline')) return true;
+  if (lower.includes('subjects failed') || lower.includes('subject failed') || lower.includes('failed subjects')) return true;
+  if (lower.includes('class slot') || lower.includes('id key')) return true;
+  if (EXACT_NON_SUBJECT_COMPACT.has(compact)) return true;
+
+  return false;
+}
+

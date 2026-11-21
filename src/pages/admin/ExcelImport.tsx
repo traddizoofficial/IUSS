@@ -7,6 +7,7 @@ import {
   BOOK_NAME_SUGGESTIONS,
   BookMappingsStore,
   isGenericSubjectName,
+  isNonSubjectColumn,
   loadBookMappings,
   normalizeClassKey,
   saveBookMappings,
@@ -167,12 +168,18 @@ export default function ExcelImport() {
         }
       }
 
-      // Skip single-card template tabs if there are other sheets
+      // Skip single-card template tabs and settings tabs if there are other sheets
       if (
         workbook.SheetNames.length > 1 &&
-        (lowerSheet.includes('result card') || lowerSheet === 'card' || lowerSheet === 'template')
+        (
+          lowerSheet.includes('result card') ||
+          lowerSheet.includes('result sheet') ||
+          lowerSheet === 'card' ||
+          lowerSheet === 'template' ||
+          lowerSheet === 'settings'
+        )
       ) {
-        sheetSummary.push({ name: sheetName, rowCount: 0, status: 'Skipped (result card template)' });
+        sheetSummary.push({ name: sheetName, rowCount: 0, status: 'Skipped (template / settings sheet)' });
         continue;
       }
 
@@ -499,7 +506,7 @@ export default function ExcelImport() {
         const lowerKey = key.toLowerCase().trim();
         if (lowerKey.endsWith(' total') || lowerKey.endsWith(' obtained')) {
           const subName = key.substring(0, key.lastIndexOf(' ')).trim();
-          if (!subName || IGNORE_SUBJECT_COLS.has(subName.toLowerCase())) continue;
+          if (!subName || IGNORE_SUBJECT_COLS.has(subName.toLowerCase()) || isNonSubjectColumn(subName)) continue;
           const val = row[key];
           if (val !== '' && val !== null && val !== undefined && Number.isFinite(Number(val))) {
             if (lowerKey.endsWith(' total')) {
@@ -510,18 +517,21 @@ export default function ExcelImport() {
           }
         }
       }
-      for (const key of Object.keys(row)) {
-        if (mappedKeys.has(key) || key === 'Detected Sheet Class') continue;
-        const lowerKey = key.toLowerCase().trim();
-        if (lowerKey.endsWith(' total') || lowerKey.endsWith(' obtained')) continue;
-        if (IGNORE_SUBJECT_COLS.has(lowerKey)) continue;
-        const matchMax = key.match(/^(.+?)\s*[\(\[]\s*(\d+)\s*[\)\]]$/);
-        const cleanName = matchMax ? matchMax[1].trim() : key.trim();
-        const maxMarks = matchMax ? Number(matchMax[2]) : 100;
-        if (!cleanName || found.has(cleanName) || IGNORE_SUBJECT_COLS.has(cleanName.toLowerCase())) continue;
-        const val = row[key];
-        if (val !== '' && val !== null && val !== undefined && Number.isFinite(Number(val))) {
-          found.set(cleanName, maxMarks);
+      // Only check single-column subjects if no paired Total/Obtained subject columns exist on this row
+      if (found.size === 0) {
+        for (const key of Object.keys(row)) {
+          if (mappedKeys.has(key) || key === 'Detected Sheet Class') continue;
+          const lowerKey = key.toLowerCase().trim();
+          if (lowerKey.endsWith(' total') || lowerKey.endsWith(' obtained')) continue;
+          if (IGNORE_SUBJECT_COLS.has(lowerKey) || isNonSubjectColumn(key)) continue;
+          const matchMax = key.match(/^(.+?)\s*[\(\[]\s*(\d+)\s*[\)\]]$/);
+          const cleanName = matchMax ? matchMax[1].trim() : key.trim();
+          const maxMarks = matchMax ? Number(matchMax[2]) : 100;
+          if (!cleanName || found.has(cleanName) || IGNORE_SUBJECT_COLS.has(cleanName.toLowerCase()) || isNonSubjectColumn(cleanName)) continue;
+          const val = row[key];
+          if (val !== '' && val !== null && val !== undefined && Number.isFinite(Number(val))) {
+            found.set(cleanName, maxMarks);
+          }
         }
       }
       return found;
@@ -644,7 +654,7 @@ export default function ExcelImport() {
 
             if (isTotal || isObtained) {
               const subName = key.substring(0, key.lastIndexOf(' ')).trim();
-              if (!subName || IGNORE_SUBJECT_COLS.has(subName.toLowerCase())) continue;
+              if (!subName || IGNORE_SUBJECT_COLS.has(subName.toLowerCase()) || isNonSubjectColumn(subName, { allowMonthlyTests: true })) continue;
 
               const rawVal = row[key];
               if (rawVal !== '' && rawVal !== null && rawVal !== undefined) {
@@ -658,25 +668,27 @@ export default function ExcelImport() {
             }
           }
 
-          // Second pass: single-column subjects (for 1-row header sheets, e.g., "English" or "English (75)")
-          for (const key of Object.keys(row)) {
-            if (mappedKeys.has(key) || key === 'Detected Sheet Class') continue;
+          // Second pass: single-column subjects ONLY for 1-row header sheets with no paired Total/Obtained columns
+          if (Object.keys(subMap).length === 0) {
+            for (const key of Object.keys(row)) {
+              if (mappedKeys.has(key) || key === 'Detected Sheet Class') continue;
 
-            const lowerKey = key.toLowerCase().trim();
-            if (lowerKey.endsWith(' total') || lowerKey.endsWith(' obtained')) continue;
-            if (IGNORE_SUBJECT_COLS.has(lowerKey)) continue;
+              const lowerKey = key.toLowerCase().trim();
+              if (lowerKey.endsWith(' total') || lowerKey.endsWith(' obtained')) continue;
+              if (IGNORE_SUBJECT_COLS.has(lowerKey) || isNonSubjectColumn(key, { allowMonthlyTests: true })) continue;
 
-            const matchMax = key.match(/^(.+?)\s*[\(\[]\s*(\d+)\s*[\)\]]$/);
-            const cleanSubName = matchMax ? matchMax[1].trim() : key.trim();
-            const parsedMax = matchMax ? Number(matchMax[2]) : 100;
+              const matchMax = key.match(/^(.+?)\s*[\(\[]\s*(\d+)\s*[\)\]]$/);
+              const cleanSubName = matchMax ? matchMax[1].trim() : key.trim();
+              const parsedMax = matchMax ? Number(matchMax[2]) : 100;
 
-            if (!cleanSubName || subMap[cleanSubName] || IGNORE_SUBJECT_COLS.has(cleanSubName.toLowerCase())) continue;
+              if (!cleanSubName || subMap[cleanSubName] || IGNORE_SUBJECT_COLS.has(cleanSubName.toLowerCase()) || isNonSubjectColumn(cleanSubName, { allowMonthlyTests: true })) continue;
 
-            const rawVal = row[key];
-            if (rawVal !== '' && rawVal !== null && rawVal !== undefined) {
-              const val = Number(rawVal);
-              if (Number.isFinite(val)) {
-                subMap[cleanSubName] = { total: parsedMax, obtained: val };
+              const rawVal = row[key];
+              if (rawVal !== '' && rawVal !== null && rawVal !== undefined) {
+                const val = Number(rawVal);
+                if (Number.isFinite(val)) {
+                  subMap[cleanSubName] = { total: parsedMax, obtained: val };
+                }
               }
             }
           }
@@ -701,10 +713,7 @@ export default function ExcelImport() {
             }
           }
 
-          const mainSubs = subjects.filter(s => {
-            const l = s.subjectName.toLowerCase().replace(/\s+/g, '');
-            return !l.includes('month') && !l.includes('discipline') && l !== 'grand' && l !== 'grandtotal';
-          });
+          const mainSubs = subjects.filter(s => !isNonSubjectColumn(s.subjectName));
 
           const calcTotal = mainSubs.reduce((acc, s) => acc + s.totalMarks, 0);
           const calcObtained = mainSubs.reduce((acc, s) => acc + s.obtainedMarks, 0);

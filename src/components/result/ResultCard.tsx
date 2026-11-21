@@ -3,6 +3,7 @@ import { Result, Exam, SchoolSettings } from '../../types';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import { cn } from '../../lib/utils';
+import { isNonSubjectColumn } from '../../lib/subjectBookMappings';
 import html2canvas from 'html2canvas';
 import { toJpeg } from 'html-to-image';
 import jsPDF from 'jspdf';
@@ -169,23 +170,9 @@ export default function ResultCard({ result, exam }: ResultCardProps) {
     }
   };
 
-  // Helper to filter out meta subjects and imported totals (including Grand & Discipline)
+  // Helper to filter out meta subjects, helper/auto columns, and imported totals (including Grand & Discipline)
   const isIgnoredMetaSubject = (name: string) => {
-    if (!name || name.trim() === '') return true;
-    const lower = name.toLowerCase().replace(/\s+/g, '');
-    return lower.includes('month') ||
-           lower.includes('discipline') ||
-           lower === 'grand' ||
-           lower === 'total' ||
-           lower === 'grandtotal' ||
-           lower === 'grandobtained' ||
-           lower === 'totalmarks' ||
-           lower === 'obtainedmarks' ||
-           lower === 'overall' ||
-           lower === 'percentage' ||
-           lower === 'grade' ||
-           lower === 'status' ||
-           lower === 'result';
+    return isNonSubjectColumn(name);
   };
 
   const isAttendanceName = (name: string) => {

@@ -6,6 +6,7 @@ import { Trash2, Search, BookOpen, X } from 'lucide-react';
 import ResultCard from '../../components/result/ResultCard';
 import {
   BOOK_NAME_SUGGESTIONS,
+  isNonSubjectColumn,
   loadBookMappings,
   normalizeClassKey,
   saveBookMappings,
@@ -114,8 +115,7 @@ export default function Results() {
       if (cls !== bookClass) return;
       (r.subjects || []).forEach(s => {
         const name = (s.subjectName || '').trim();
-        const lower = name.toLowerCase().replace(/\s+/g, '');
-        if (!name || lower.includes('month') || lower.includes('discipline') || lower === 'grand' || lower === 'grandtotal') return;
+        if (isNonSubjectColumn(name)) return;
         if (!subTotals.has(name)) subTotals.set(name, s.totalMarks);
       });
     });
