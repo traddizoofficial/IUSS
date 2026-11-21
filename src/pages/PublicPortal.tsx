@@ -16,6 +16,7 @@ export default function PublicPortal() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [result, setResult] = useState<Result | null>(null);
+  const [multipleResults, setMultipleResults] = useState<Result[]>([]);
 
   useEffect(() => {
     const fetchExams = async () => {
@@ -25,16 +26,18 @@ export default function PublicPortal() {
         const fetchedExams = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Exam)).filter(e => e.status === 'Published');
         setExams(fetchedExams);
       } catch (err) {
-        // Just fail silently for exams on public portal if offline, but ideally show error.
         console.error('Error fetching exams', err);
       }
     };
     fetchExams();
   }, []);
 
+  const normalizeId = (val: any) => String(val ?? '').trim().toLowerCase();
+
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedExamId || !identifier) {
+    const trimmed = identifier.trim();
+    if (!selectedExamId || !trimmed) {
       setError('Please provide both an examination and an identifier.');
       return;
     }
@@ -42,35 +45,63 @@ export default function PublicPortal() {
     setLoading(true);
     setError('');
     setResult(null);
+    setMultipleResults([]);
 
     try {
       const q = query(
         collection(db, 'results'),
         where('examId', '==', selectedExamId)
       );
-      
+
       const snapshot = await getDocs(q);
-      
-      const matchedResults = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Result)).filter(r => {
-        const valToMatch = identifierType === 'rollNumber' ? r.rollNumber : r.studentId;
-        return String(valToMatch).trim().toLowerCase() === String(identifier).trim().toLowerCase();
-      });
-      
+      const examResults = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Result));
+      const searchVal = normalizeId(trimmed);
+      const searchNoZeros = searchVal.replace(/^0+/, '');
+
+      const matchesField = (r: Result, field: 'rollNumber' | 'studentId', looseZero = false) => {
+        const raw = field === 'rollNumber' ? r.rollNumber : r.studentId;
+        const val = normalizeId(raw);
+        if (!val) return false;
+        if (val === searchVal) return true;
+        if (looseZero && searchNoZeros && val.replace(/^0+/, '') === searchNoZeros) return true;
+        return false;
+      };
+
+      // 1. Check selected identifier type first
+      const primaryField = identifierType;
+      const secondaryField = identifierType === 'rollNumber' ? 'studentId' : 'rollNumber';
+
+      let matchedResults = examResults.filter(r => matchesField(r, primaryField));
+
+      // 2. Fallback to the other identifier field (e.g., if user entered Class ID under Roll Number or vice versa)
+      if (matchedResults.length === 0) {
+        matchedResults = examResults.filter(r => matchesField(r, secondaryField));
+      }
+
+      // 3. Fallback ignoring leading zeros (e.g. "02" vs "2")
+      if (matchedResults.length === 0 && searchNoZeros) {
+        matchedResults = examResults.filter(
+          r => matchesField(r, primaryField, true) || matchesField(r, secondaryField, true)
+        );
+      }
+
       if (matchedResults.length === 0) {
         setError('No result is available for this student and examination.');
       } else {
-        const foundResult = matchedResults[0];
-        if (foundResult.status !== 'Published') {
+        const publishedMatches = matchedResults.filter(r => r.status === 'Published');
+        if (publishedMatches.length === 0) {
           setError('This result has not been published yet.');
+        } else if (publishedMatches.length === 1) {
+          setResult(publishedMatches[0]);
         } else {
-          setResult(foundResult);
+          setMultipleResults(publishedMatches);
         }
       }
     } catch (err: any) {
       setError('An error occurred while searching for the result. Please try again.');
       try {
         handleFirestoreError(err, OperationType.GET, 'results');
-      } catch (e) {} // already handled via state
+      } catch (e) {}
     } finally {
       setLoading(false);
     }
@@ -146,14 +177,14 @@ export default function PublicPortal() {
                         onChange={() => setIdentifierType('studentId')}
                         className="text-blue-600 focus:ring-blue-500"
                       />
-                      <span className="text-sm font-medium text-slate-700">Student ID</span>
+                      <span className="text-sm font-medium text-slate-700">Student ID / Class ID</span>
                     </label>
                   </div>
                   
                   <div>
                     <input
                       type="text"
-                      placeholder={identifierType === 'rollNumber' ? 'Enter Roll Number' : 'Enter Student ID'}
+                      placeholder={identifierType === 'rollNumber' ? 'Enter Roll Number or Class ID' : 'Enter Student ID / Class ID'}
                       value={identifier}
                       onChange={(e) => setIdentifier(e.target.value)}
                       className="w-full rounded-lg border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3"
@@ -164,6 +195,32 @@ export default function PublicPortal() {
                 {error && (
                   <div className="p-4 bg-red-50 text-red-700 rounded-lg text-sm border border-red-200">
                     {error}
+                  </div>
+                )}
+
+                {multipleResults.length > 1 && (
+                  <div className="p-4 bg-blue-50 rounded-xl border border-blue-200 space-y-3">
+                    <p className="text-sm font-bold text-blue-900">
+                      Multiple students matched this ID/Roll Number. Please select your student:
+                    </p>
+                    <div className="space-y-2">
+                      {multipleResults.map((item) => (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => setResult(item)}
+                          className="w-full text-left bg-white hover:bg-blue-100 border border-blue-200 rounded-lg p-3 transition-colors flex justify-between items-center"
+                        >
+                          <div>
+                            <div className="font-bold text-slate-800">{item.studentName || 'Student'}</div>
+                            <div className="text-xs text-slate-500">
+                              Class: {item.className || '-'} {item.section ? `(${item.section})` : ''} | Roll: {item.rollNumber} | ID: {item.studentId}
+                            </div>
+                          </div>
+                          <span className="text-xs font-bold text-blue-700">View &rarr;</span>
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 )}
 

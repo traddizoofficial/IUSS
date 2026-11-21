@@ -169,37 +169,75 @@ export default function ResultCard({ result, exam }: ResultCardProps) {
     }
   };
 
-  // Helper to filter out meta subjects and imported totals
-  const isMetaSubject = (name: string) => {
-    if (!name || name.trim() === '') return true; // Filter out empty rows (like imported Excel totals without names)
+  // Helper to filter out meta subjects and imported totals (including Grand & Discipline)
+  const isIgnoredMetaSubject = (name: string) => {
+    if (!name || name.trim() === '') return true;
     const lower = name.toLowerCase().replace(/\s+/g, '');
-    return lower.includes('month') || 
-           lower.includes('discipline') || 
-           lower.includes('attendance') || 
-           lower.includes('present') || 
-           lower.includes('workingday') ||
+    return lower.includes('month') ||
+           lower.includes('discipline') ||
+           lower === 'grand' ||
            lower === 'total' ||
            lower === 'grandtotal' ||
+           lower === 'grandobtained' ||
            lower === 'totalmarks' ||
-           lower === 'obtainedmarks';
+           lower === 'obtainedmarks' ||
+           lower === 'overall' ||
+           lower === 'percentage' ||
+           lower === 'grade' ||
+           lower === 'status' ||
+           lower === 'result';
   };
 
-  const mainSubjects = result.subjects?.filter(s => !isMetaSubject(s.subjectName)) || [];
-  
-  const getSub = (keyword: string) => 
+  const isAttendanceName = (name: string) => {
+    const lower = (name || '').toLowerCase().replace(/\s+/g, '');
+    return lower.includes('attendance') || lower.includes('present') || lower.includes('workingday');
+  };
+
+  const filteredSubjects = (result.subjects || []).filter(s => !isIgnoredMetaSubject(s.subjectName));
+  const regularSubjects = filteredSubjects.filter(s => !isAttendanceName(s.subjectName));
+  let attendanceSub = filteredSubjects.find(s => isAttendanceName(s.subjectName));
+
+  if (!attendanceSub && result.attendance && result.attendance.trim() !== '' && !isNaN(Number(result.attendance))) {
+    const attObt = Number(result.attendance);
+    const attTotal = 100;
+    const attPercVal = (attObt / attTotal) * 100;
+    attendanceSub = {
+      subjectName: 'Attendance',
+      totalMarks: attTotal,
+      obtainedMarks: attObt,
+      percentage: attPercVal,
+      grade: attPercVal >= 90 ? 'A+' : attPercVal >= 80 ? 'A' : attPercVal >= 70 ? 'B' : attPercVal >= 60 ? 'C' : attPercVal >= 50 ? 'D' : 'F'
+    };
+  }
+
+  // Place Attendance right below Ethics (or at the end of subjects)
+  const mainSubjects = [...regularSubjects];
+  if (attendanceSub) {
+    const ethicsIndex = mainSubjects.findIndex(s => s.subjectName.toLowerCase().includes('ethic'));
+    if (ethicsIndex !== -1) {
+      mainSubjects.splice(ethicsIndex + 1, 0, attendanceSub);
+    } else {
+      mainSubjects.push(attendanceSub);
+    }
+  }
+
+  const getSub = (keyword: string) =>
     result.subjects?.find(s => s.subjectName.toLowerCase().replace(/\s+/g, '').includes(keyword.toLowerCase()));
 
   const m1 = getSub('month1');
   const m2 = getSub('month2');
   const m3 = getSub('month3');
-  const attendanceSub = getSub('attendance') || getSub('present') || { obtainedMarks: result.attendance ? Number(result.attendance) : 0, totalMarks: 100 };
-  const disciplineSub = getSub('discipline') || { obtainedMarks: result.discipline ? Number(result.discipline) : 0, totalMarks: 100 };
 
-  // Calculate true totals from main subjects only
+  // Calculate true totals from main subjects (including Attendance, excluding Grand/Discipline/Months)
   const trueTotal = mainSubjects.reduce((acc, s) => acc + s.totalMarks, 0);
   const trueObtained = mainSubjects.reduce((acc, s) => acc + s.obtainedMarks, 0);
   const truePercentage = trueTotal > 0 ? (trueObtained / trueTotal) * 100 : 0;
+  const trueGrade = truePercentage >= 90 ? 'A+' : truePercentage >= 80 ? 'A' : truePercentage >= 70 ? 'B' : truePercentage >= 60 ? 'C' : truePercentage >= 50 ? 'D' : 'F';
   const trueStatus = truePercentage >= 33 ? 'Pass' : 'Fail';
+
+  const attPerc = attendanceSub && attendanceSub.totalMarks > 0
+    ? (attendanceSub.obtainedMarks / attendanceSub.totalMarks) * 100
+    : null;
 
   // Calculate Monthly Test Averages
   let mTotal = 0;
@@ -345,57 +383,14 @@ export default function ResultCard({ result, exam }: ResultCardProps) {
           <div className="flex justify-between items-center mb-2 px-2 font-bold text-xs max-w-lg">
             <div>
               <span className="text-slate-800 mr-2">Overall Grade:</span>
-              <span className="text-[#d97706] text-base">{result.grade || (truePercentage >= 80 ? 'A' : truePercentage >= 70 ? 'B' : truePercentage >= 60 ? 'C' : 'D')}</span>
+              <span className="text-[#d97706] text-base">{trueTotal > 0 ? trueGrade : (result.grade || 'F')}</span>
             </div>
             <div>
               <span className="text-slate-800 mr-2">Overall Result:</span>
               <span className={cn("text-base", trueStatus === 'Pass' ? 'text-green-700' : 'text-red-600')}>
-                {result.resultStatus || trueStatus}
+                {trueTotal > 0 ? trueStatus : (result.resultStatus || trueStatus)}
               </span>
             </div>
-          </div>
-
-          {/* Attendance Report */}
-          <div className="mb-2">
-            <div className="bg-[#1e3a8a] text-white px-2 py-0.5 text-[11px] font-bold uppercase">ATTENDANCE REPORT</div>
-            <table className="w-full border-collapse border border-slate-300 text-xs font-bold">
-              <tbody>
-                <tr>
-                  <td className="border border-slate-300 bg-[#f8fafc] px-2 py-1 w-[20%]">Total Working Days</td>
-                  <td className="border border-slate-300 px-2 py-1 text-center text-green-700 w-[15%]">{attendanceSub?.totalMarks || 100}</td>
-                  <td className="border border-slate-300 bg-[#f8fafc] px-2 py-1 w-[20%] text-center">Days Present</td>
-                  <td className="border border-slate-300 px-2 py-1 text-center text-green-700 w-[15%]">{attendanceSub?.obtainedMarks || 0}</td>
-                  <td className="border border-slate-300 bg-[#f8fafc] px-2 py-1 w-[15%] text-center">Attendance %</td>
-                  <td className="border border-slate-300 px-2 py-1 text-center text-green-700 w-[15%]">
-                    {attendanceSub && attendanceSub.totalMarks > 0 ? Math.round((attendanceSub.obtainedMarks / attendanceSub.totalMarks) * 100) : 0}%
-                  </td>
-                  <td className="border border-slate-300 bg-[#f8fafc] px-2 py-1 text-center">Status</td>
-                  <td className="border border-slate-300 px-2 py-1 text-center text-red-600">
-                    {(attendanceSub && attendanceSub.totalMarks > 0 ? (attendanceSub.obtainedMarks / attendanceSub.totalMarks) * 100 : 0) >= 75 ? <span className="text-green-700">Pass</span> : 'Fail'}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          
-          {/* Discipline Report */}
-          <div className="mb-2">
-            <div className="bg-[#1e3a8a] text-white px-2 py-0.5 text-[11px] font-bold uppercase">DISCIPLINE REPORT</div>
-            <table className="w-full border-collapse border border-slate-300 text-xs font-bold">
-              <tbody>
-                <tr>
-                  <td className="border border-slate-300 bg-[#f8fafc] px-2 py-1 w-[20%]">Discipline Marks</td>
-                  <td className="border border-slate-300 px-2 py-1 text-center text-green-700 w-[15%]">{disciplineSub?.obtainedMarks || 0} / {disciplineSub?.totalMarks || 100}</td>
-                  <td className="border border-slate-300 bg-[#f8fafc] px-2 py-1 w-[20%] text-center">Discipline %</td>
-                  <td className="border border-slate-300 px-2 py-1 text-center text-green-700 w-[15%]">
-                    {disciplineSub && disciplineSub.totalMarks > 0 ? Math.round((disciplineSub.obtainedMarks / disciplineSub.totalMarks) * 100) : 0}%
-                  </td>
-                  <td className="border border-slate-300 bg-[#f8fafc] px-2 py-1 text-center" colSpan={2}></td>
-                  <td className="border border-slate-300 bg-[#f8fafc] px-2 py-1 text-center">Status</td>
-                  <td className="border border-slate-300 px-2 py-1 text-center text-green-700">Pass</td>
-                </tr>
-              </tbody>
-            </table>
           </div>
 
           {/* Previous Monthly Test Report */}
@@ -445,15 +440,17 @@ export default function ResultCard({ result, exam }: ResultCardProps) {
               <tbody>
                 <tr>
                   <td className="border border-slate-300 bg-[#f8fafc] px-2 py-1 w-28">Academic:</td>
-                  <td className="border border-slate-300 px-2 py-1 italic text-green-700 font-normal">{result.remarks || 'Excellent performance. Keep it up!'}</td>
+                  <td className="border border-slate-300 px-2 py-1 italic text-green-700 font-normal">
+                    {result.remarks || (truePercentage >= 80 ? 'Excellent performance. Keep it up!' : truePercentage >= 60 ? 'Good performance. Keep working hard.' : truePercentage >= 33 ? 'Satisfactory performance. Needs more effort.' : 'Needs serious improvement.')}
+                  </td>
                 </tr>
                 <tr>
                   <td className="border border-slate-300 bg-[#f8fafc] px-2 py-1 w-28">Attendance:</td>
-                  <td className="border border-slate-300 px-2 py-1 italic text-red-600 font-normal">Attendance is below the required level. Please ensure regular attendance.</td>
-                </tr>
-                <tr>
-                  <td className="border border-slate-300 bg-[#f8fafc] px-2 py-1 w-28">Discipline:</td>
-                  <td className="border border-slate-300 px-2 py-1 font-normal"></td>
+                  <td className={cn("border border-slate-300 px-2 py-1 italic font-normal", attPerc !== null && attPerc >= 75 ? "text-green-700" : "text-red-600")}>
+                    {attPerc !== null && attPerc >= 75
+                      ? 'Regular attendance. Keep it up!'
+                      : 'Attendance is below the required level. Please ensure regular attendance.'}
+                  </td>
                 </tr>
               </tbody>
             </table>
